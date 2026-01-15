@@ -10,3 +10,34 @@ This repository contains the implementation of our research on unsupervised fine
 | Stanford Cars | https://huggingface.co/datasets/tanganke/stanford_cars/ |
 | FGVC Aircraft | https://www.robots.ox.ac.uk/~vgg/data/fgvc-aircraft/ |
 | Stanford Dogs | http://vision.stanford.edu/aditya86/ImageNetDogs/ |
+
+All datasets are expected to be processed and organized in a unified ImageFolder format.Please download the datasets and arrange them following this structure.
+For the CUB-200-2011 and FGVC Aircraft dataset, you can use the following command to convert it into the desired ImageFolder format:
+
+```
+python aircraft_organize.py --ds /path/to/fgvc-aircraft-2013b --out /path/to/aircraft --link none
+python bird_organize.py -----
+```
+
+```
+LEAD
+├── bird/
+│   ├── images/ 
+		├── 001.Black_footed_Albatross
+		├── 002.Laysan_Albatross
+		……
+	├── images.txt
+	├── train_test_split.txt
+├── car/
+│   ├── train/ 
+		├── Acura Integra Type R 2001
+		├── Acura RL Sedan 2012
+		……
+    ├── test/
+├── aircraft/
+│   ├── train/ 
+		├── 707-320
+		├── 727-200
+		……
+    ├── test/
+```
