@@ -19,6 +19,8 @@ For the **CUB-200-2011** and **FGVC Aircraft** dataset, you can use the followin
 
 ```
 python aircraft_organize.py --ds /path/to/fgvc-aircraft-2013b --out /path/to/aircraft --link none
+```
+```
 python bird_organize.py --cub_root /path/to/CUB_200_2011 --output_root /path/to/bird_imagefolder
 ```
 
