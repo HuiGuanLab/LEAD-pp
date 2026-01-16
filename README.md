@@ -7,12 +7,13 @@ This work is an extension of our previous method, LEAD, which focuses on entropy
 The official implementation of LEAD is available at: https://github.com/HuiGuanLab/LEAD.
 
 ## 📦 Datasets Preparation
-| Dataset | Download Link |
-| -- | -- |
-| CUB-200-2011 | https://www.vision.caltech.edu/datasets/cub_200_2011/ |
-| Stanford Cars | https://huggingface.co/datasets/tanganke/stanford_cars/ |
-| FGVC Aircraft | https://www.robots.ox.ac.uk/~vgg/data/fgvc-aircraft/ |
-| Stanford Dogs | http://vision.stanford.edu/aditya86/ImageNetDogs/ |
+| Dataset | Download |
+|--------|----------|
+| **CUB-200-2011** | [Official Website](https://www.vision.caltech.edu/datasets/cub_200_2011/) |
+| **Stanford Cars** | [HuggingFace](https://huggingface.co/datasets/tanganke/stanford_cars/) |
+| **FGVC Aircraft** | [Official Website](https://www.robots.ox.ac.uk/~vgg/data/fgvc-aircraft/) |
+| **Stanford Dogs** | [Official Website](http://vision.stanford.edu/aditya86/ImageNetDogs/) |
+
 
 All datasets are expected to be processed and organized in a unified **ImageFolder format**.Please download the datasets and arrange them following this structure.
 For the **CUB-200-2011** and **FGVC Aircraft** dataset, you can use the following command to convert it into the desired ImageFolder format:
