@@ -94,7 +94,7 @@ After that, we will obtain the cropped version of the dataset.
 
 `$checkpoints_name` is the name of the folder where the checkpoints are saved in.
 
-`$num_classes` is the Number of labels. bird 200, car 196, aircraft 100.
+`$num_classes` is the Number of labels. **bird 200**, **car 196**, **aircraft 100**.
 
 `$cuda_device` is the ID of used GPU.
 
@@ -123,7 +123,7 @@ After that, we will obtain the cropped version of the dataset.
 
 `$checkpoints_name` is the name of the folder where the checkpoints are saved in.
 
-`$num_classes` is the Number of labels. bird 200, car 196, aircraft 100.
+`$num_classes` is the Number of labels. **bird 200**, **car 196**, **aircraft 100**.
 
 `$cuda_device` is the ID of used GPU.
 
@@ -150,7 +150,7 @@ After that, we will obtain the cropped version of the dataset.
 
 `$checkpoints_name` is the name of the folder where the linear probing checkpoints are saved in.
 
-`$num_classes` is the Number of labels. bird 200, car 196, aircraft 100.
+`$num_classes` is the Number of labels. **bird 200**, **car 196**, **aircraft 100**.
 
 `$cuda_device` is the ID of used GPU.
 
