@@ -7,12 +7,34 @@ This work is an extension of our previous method, LEAD, which focuses on entropy
 The official implementation of LEAD is available at: https://github.com/HuiGuanLab/LEAD.
 
 ## 📦 Datasets Preparation
-| Dataset | Download |
-|--------|----------|
-| **CUB-200-2011** | [Official Website](https://www.vision.caltech.edu/datasets/cub_200_2011/) |
-| **Stanford Cars** | [HuggingFace](https://huggingface.co/datasets/tanganke/stanford_cars/) |
-| **FGVC Aircraft** | [Official Website](https://www.robots.ox.ac.uk/~vgg/data/fgvc-aircraft/) |
-| **Stanford Dogs** | [Official Website](http://vision.stanford.edu/aditya86/ImageNetDogs/) |
+In our experiments, we use the following publicly available fine-grained datasets. 
+All datasets can be downloaded by clicking the corresponding links below.
+<table width="100%">
+  <thead>
+    <tr>
+      <th align="left">Dataset</th>
+      <th align="left">Download</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><b>CUB-200-2011</b></td>
+      <td><a href="https://www.vision.caltech.edu/datasets/cub_200_2011/">Official Website</a></td>
+    </tr>
+    <tr>
+      <td><b>Stanford Cars</b></td>
+      <td><a href="https://huggingface.co/datasets/tanganke/stanford_cars/">HuggingFace</a></td>
+    </tr>
+    <tr>
+      <td><b>FGVC Aircraft</b></td>
+      <td><a href="https://www.robots.ox.ac.uk/~vgg/data/fgvc-aircraft/">Official Website</a></td>
+    </tr>
+    <tr>
+      <td><b>Stanford Dogs</b></td>
+      <td><a href="http://vision.stanford.edu/aditya86/ImageNetDogs/">Official Website</a></td>
+    </tr>
+  </tbody>
+</table>
 
 
 All datasets are expected to be processed and organized in a unified **ImageFolder format**.Please download the datasets and arrange them following this structure.
