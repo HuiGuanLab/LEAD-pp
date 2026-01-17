@@ -24,7 +24,7 @@ from utils import set_seed,get_lr,Similarity,GaussianBlur
 from dataset import MyPair_entropy_DDT_four
 # from ViT import vit_large_patch16_224 as ViT
 # from ViT import vit_base_patch16_224 as ViT
-from model_new import MoCo_gradcam_KL
+from models import MoCo_gradcam_KL
 
 # from tensorboard import SummaryWriter
 from torch.utils.tensorboard import SummaryWriter
