@@ -1,25 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-"""
-DDT-based cropping on an ImageFolder dataset (NO extra expansion).
-Goal:
-  1) 只按 DDT 的“第一主成分响应最集中的区域”裁剪（不再外扩）。
-  2) 输出裁剪图像为【严格正方形】（以 bbox 最大边为 side，中心不变，边界 clamp，side 不变）。
-  3) 对少量异常的超过阈值响应（离群点）做鲁棒处理：多 cut_rate 搜索 + 面积约束，选更“集中”的框。
-
-Usage:
-CUDA_VISIBLE_DEVICES=0 python get_crop_2_square.py \
-  --root /media/data1/zzh/EAD-FFAB/EAD/bird \
-  --trans-vec /media/data1/zzh/LEAD++/DDT/DDT_result/bird1/vec_res50_bird.npy \
-  --descriptors-mean-tensor /media/data1/zzh/LEAD++/DDT/DDT_result/bird1/mean_tensor_bird.pth \
-  --output /media/data1/zzh/LEAD++/DDT/crop_dataset/bird_crop_square
-
-Notes:
-- 兼容 DDT_load.DDT.co_locate() 返回 (x,y,w,h) 或 (x1,y1,x2,y2)：
-  自动判断并转成 xyxy 再用。
-"""
-
 import argparse
 import os
 import random
@@ -31,8 +12,12 @@ from DDT_load import DDT
 
 # ---------------------- Args ----------------------
 def get_args():
-    p = argparse.ArgumentParser("DDT crop & save on ImageFolder (square output, robust)")
+    p = argparse.ArgumentParser("DDT crop & save on ImageFolder (task-wise policy)")
     p.add_argument('--seed', default=123, type=int, help='random seed')
+
+    # Any string is allowed: non bird/car/aircraft defaults to bird-style square crop
+    p.add_argument('--task', type=str, default='bird',
+                   help='dataset name; bird/car/aircraft special; others default to bird-style square')
 
     p.add_argument('--root', type=str, required=True, help='ImageFolder root (expects <root>/<class>/*)')
     p.add_argument('--trans-vec', type=str, required=True, help='path to trans_vec .npy')
@@ -43,9 +28,6 @@ def get_args():
 
     p.add_argument('--output', type=str, required=True,
                    help='output root for cropped images (mirror subfolders & filenames)')
-
-    # p.add_argument('--over-num', type=float, default=0.1)
-    # p.add_argument('--cut-rates', type=float, nargs='+', default=[1.25, 1.15, 1.05, 0.95, 0.85])
 
     return p.parse_args()
 
@@ -83,24 +65,23 @@ def _clamp_xyxy(x1, y1, x2, y2, W, H):
 
 def _as_xyxy_from_ddt_return(b, W, H):
     """
-    兼容 DDT_load.DDT.co_locate() 的两种常见返回：
-      - (x, y, w, h)  (cv2.boundingRect 风格)
+    Compatible with two common outputs of DDT_load.DDT.co_locate():
+      - (x, y, w, h)  (cv2.boundingRect style)
       - (x1, y1, x2, y2)
-    返回统一的 (x1, y1, x2, y2)（clamp 后）
+    Always returns (x1, y1, x2, y2) after clamping.
     """
     if b is None or len(b) != 4:
         return None
 
     a0, a1, a2, a3 = map(float, b)
 
-    # 经验判断：如果 a2,a3 明显小于图像尺寸且 (a0+a2)<=W, (a1+a3)<=H，则更像 (x,y,w,h)
-    # 否则按 (x1,y1,x2,y2) 处理
+    # Heuristic: if a2, a3 look like width/height
     if (a2 > 0 and a3 > 0) and (a0 + a2 <= W + 1) and (a1 + a3 <= H + 1) and (a2 <= W) and (a3 <= H):
-        # treat as xywh
+        # xywh -> xyxy
         x1, y1 = a0, a1
         x2, y2 = a0 + a2, a1 + a3
     else:
-        # treat as xyxy
+        # already xyxy
         x1, y1, x2, y2 = a0, a1, a2, a3
 
     return _clamp_xyxy(x1, y1, x2, y2, W, H)
@@ -108,38 +89,68 @@ def _as_xyxy_from_ddt_return(b, W, H):
 
 def fit_bbox_to_square_by_max_side(x1, y1, x2, y2, W, H):
     """
-    用 bbox 的最大边作为正方形边长 side，中心保持 bbox 中心。
-    关键：clamp 时保持 side 不变，只移动左上角，保证输出严格正方形。
+    Use the maximum side of the bbox as the square side length.
+    Keep the bbox center fixed; clamp without changing side length
+    to guarantee a strict square output.
     """
     import math
-
     bw = max(1, x2 - x1)
     bh = max(1, y2 - y1)
     cx = 0.5 * (x1 + x2)
     cy = 0.5 * (y1 + y2)
 
     side = int(math.ceil(max(bw, bh)))
-    side = min(side, W, H)  # 必须能放进图像短边
+    side = min(side, W, H)
 
     x1n = int(math.floor(cx - side / 2))
     y1n = int(math.floor(cy - side / 2))
 
-    # clamp（保持 side 不变）
+    # Clamp while keeping side unchanged
     x1n = max(0, min(x1n, W - side))
     y1n = max(0, min(y1n, H - side))
 
     x2n = x1n + side
     y2n = y1n + side
+    return _clamp_xyxy(x1n, y1n, x2n, y2n, W, H)
 
+
+def expand_bbox_anisotropic(x1, y1, x2, y2, W, H, pad_w_ratio: float, pad_h_ratio: float):
+    """
+    Anisotropic expansion: expand width and height with different ratios
+    around the bbox center, keeping a rectangular shape.
+      new_w = w * (1 + pad_w_ratio)
+      new_h = h * (1 + pad_h_ratio)
+    Clamp while keeping new_w/new_h unchanged to avoid shrinking.
+    """
+    import math
+    bw = max(1, x2 - x1)
+    bh = max(1, y2 - y1)
+    cx = 0.5 * (x1 + x2)
+    cy = 0.5 * (y1 + y2)
+
+    new_w = int(math.ceil(bw * (1.0 + pad_w_ratio)))
+    new_h = int(math.ceil(bh * (1.0 + pad_h_ratio)))
+
+    new_w = min(max(new_w, 2), W)
+    new_h = min(max(new_h, 2), H)
+
+    x1n = int(math.floor(cx - new_w / 2))
+    y1n = int(math.floor(cy - new_h / 2))
+
+    x1n = max(0, min(x1n, W - new_w))
+    y1n = max(0, min(y1n, H - new_h))
+
+    x2n = x1n + new_w
+    y2n = y1n + new_h
     return _clamp_xyxy(x1n, y1n, x2n, y2n, W, H)
 
 
 def bbox_quality_score(x1, y1, x2, y2, W, H):
     """
-    评价 bbox 是否“集中且合理”：
-    - 太大：可能背景连通（阈值偏低）
-    - 太小：可能噪点/碎片（阈值过高）
-    趋向选择面积更小但仍在合理范围内的框。
+    Evaluate whether a bbox is concentrated and reasonable:
+    - Too large: likely background leakage (threshold too low)
+    - Too small: likely noise/fragments (threshold too high)
+    Prefer smaller bboxes within a reasonable area range.
     """
     bw = x2 - x1
     bh = y2 - y1
@@ -154,28 +165,25 @@ def bbox_quality_score(x1, y1, x2, y2, W, H):
 
     score = -ar
 
-    # 轻微惩罚贴边
+    # Mild penalty for touching image borders
     border_touch = 0
     if x1 <= 1: border_touch += 1
     if y1 <= 1: border_touch += 1
     if x2 >= W - 1: border_touch += 1
     if y2 >= H - 1: border_touch += 1
     score -= 0.02 * border_touch
-
     return score
 
 
 def robust_co_locate_bbox(ddt, img, trans_vectors, descriptor_means):
     """
-    多 cut_rate 搜索，挑选更集中/更合理的 bbox。
-    注意：这里不引入额外外扩参数；cut_rate 是 DDT 内部用来确定 crop side 的系数（不是额外 margin）。
+    Search over multiple cut_rate values to select a more concentrated
+    and reasonable bbox.
+    Note: no extra expansion is introduced here; cut_rate is an internal
+    DDT parameter (not an additional margin).
     """
     W, H = img.size
-
-    # 从更严格到更宽松（你原来的顺序保留）
     cut_rates = [1.25, 1.15, 1.05, 0.95, 0.85]
-
-    # 固定 over_num；如果你发现框经常过大，可改为 0.1/0.2（不想加参数就写死）
     over_num = 0.0
 
     best = None  # (score, (x1,y1,x2,y2), used_cut_rate)
@@ -193,7 +201,7 @@ def robust_co_locate_bbox(ddt, img, trans_vectors, descriptor_means):
         if best is None or s > best[0]:
             best = (s, (x1, y1, x2, y2), cr)
 
-    # 全部不合格：回退中庸阈值
+    # Fallback to a moderate threshold if all candidates are invalid
     if best is None:
         cr = 1.05
         b = ddt.co_locate(img, trans_vectors, descriptor_means, cut_rate=cr, over_num=over_num)
@@ -203,6 +211,29 @@ def robust_co_locate_bbox(ddt, img, trans_vectors, descriptor_means):
         return b_xyxy, cr
 
     return best[1], best[2]
+
+
+# ---------------------- Task Policy ----------------------
+# Only car/aircraft use anisotropic rectangular expansion;
+# all other datasets follow bird-style square cropping.
+TASK_PAD = {
+    'car':      dict(pad_w=0.10, pad_h=0.30),   # slight width expansion, larger height expansion
+    'aircraft': dict(pad_w=0.12, pad_h=0.35),   # usually flatter; expand height a bit more
+}
+
+def apply_taskwise_crop_policy(task, x1, y1, x2, y2, W, H):
+    task = (task or "").lower()
+
+    if task in ("car", "aircraft"):
+        pad = TASK_PAD[task]
+        return expand_bbox_anisotropic(
+            x1, y1, x2, y2, W, H,
+            pad_w_ratio=pad["pad_w"],
+            pad_h_ratio=pad["pad_h"],
+        )
+
+    # bird + any other dataset: default bird-style strict square crop
+    return fit_bbox_to_square_by_max_side(x1, y1, x2, y2, W, H)
 
 
 # ---------------------- Main ----------------------
@@ -224,16 +255,15 @@ def main():
         try:
             W, H = img.size
 
-            # 1) 鲁棒选“PC1 最集中”的 bbox（先兼容 co_locate 返回格式）
+            # 1) Robustly select bbox
             (x1, y1, x2, y2), used_cr = robust_co_locate_bbox(ddt, img, trans_vectors, descriptor_means)
 
-            # 2) 输出严格正方形：以 bbox 最大边为 side，中心不变，clamp 不改 side
-            x1, y1, x2, y2 = fit_bbox_to_square_by_max_side(x1, y1, x2, y2, W, H)
+            # 2) Apply task-wise crop policy
+            x1, y1, x2, y2 = apply_taskwise_crop_policy(args.task, x1, y1, x2, y2, W, H)
 
-            # 3) 裁剪并保存
+            # 3) Crop and save
             crop = img.crop((x1, y1, x2, y2))
 
-            # Mirror class subfolder & filename
             rel = os.path.relpath(file_path, start=images_root)
             dst_path = os.path.join(out_root, rel)
             os.makedirs(os.path.dirname(dst_path), exist_ok=True)
@@ -245,8 +275,8 @@ def main():
             crop.save(dst_path, **save_kwargs)
 
             if saved % 50 == 0:
-                side = (x2 - x1)
-                print(f"[OK] {saved:06d} side={side:4d} cut_rate={used_cr:.2f}  {file_path}")
+                bw, bh = (x2 - x1), (y2 - y1)
+                print(f"[OK] {saved:06d} task={args.task} bw={bw:4d} bh={bh:4d} cut_rate={used_cr:.2f}  {file_path}")
 
             saved += 1
 
