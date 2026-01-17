@@ -1,6 +1,13 @@
-pytorch==2.1.1
+torch==2.1.1
 torchvision==0.16.1
 tqdm==4.66.1
 Pillow==9.5.0
 git+https://github.com/openai/CLIP.git
-
+pandas
+numpy==1.26.4
+scikit-learn
+scipy
+scikit-image
+opencv-python-headless==4.10.0.84
+imageio
+tifffile
