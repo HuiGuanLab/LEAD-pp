@@ -165,12 +165,10 @@ After that, we will obtain the cropped version of the dataset.
 
 - Run the following script for linear probing.  We use a single machine and a single GPU to train linear probing. It will save the checkpoints to `./checkpoints_linear/$checkpoints_name/`.
 ```
-./run_linear.sh $task $dataset $pretrained $checkpoints_name $num_classes $cuda_device
+./run_linear.sh $task $pretrained $checkpoints_name $num_classes $cuda_device
 ```
 
 `$task` is the task name (bird or car or aircraft).
-
-`$dataset` is the path to the cropped dataset generated in the Mutual-information-based Localization Preprocessing step for unsupervised pre-training.
 
 `$pretrained` is the name of the folder where the training checkpoints are saved in.
 
@@ -183,7 +181,7 @@ After that, we will obtain the cropped version of the dataset.
 - An example of linear probing on CUB_200_2011.
 
 ```
-./run_linear.sh bird bird/ result_bird linear_bird 200 0
+./run_linear.sh bird result_bird linear_bird 200 0
 ```
 
 #### Image Retrieval
