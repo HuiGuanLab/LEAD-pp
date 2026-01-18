@@ -8,10 +8,10 @@ set -euo pipefail
 # Example:
 #   sh run_ddt_and_crop.sh \
 #     bird \
-#     /media/data1/zzh/EAD-FFAB/EAD/bird \
+#     ./bird \
 #     ../resnet50-19c8e357.pth \
 #     0 \
-#     /media/data1/zzh/LEAD++/DDT/output_dataset
+#     ./DDT/output_dataset
 # ==========================
 
 task=$1
@@ -68,10 +68,10 @@ echo "============================================================"
 echo "[Step 2/2] DDT crop ImageFolder (square output, robust)"
 echo "============================================================"
 
-# ✅ 你的 get_crop.py 新版只支持下面这些参数
 cmd2=(
   ${PYTHON_BIN} ${CROP_SCRIPT}
-  --seed 1234
+  --seed 123
+  --task "${task}"
   --root "${dataset}"
   --trans-vec "${VEC_PATH}"
   --descriptors-mean-tensor "${MEAN_TENSOR_PATH}"
