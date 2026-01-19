@@ -86,77 +86,56 @@ class MyPair_entropy_DDT_four(MyDataSet):
         return im_1, im_2, im_3, im_4
 
 class MyDataSet_DDT(Dataset):
-    def __init__(self, img_root, transform=None, crop_root=None, strict_crop=True, **kwargs):
+    def __init__(self, crop_root, transform=None, **kwargs):
         """
-        img_root: root directory of the original dataset (used to build class labels and relative paths)
-        crop_root: root directory of cropped images (must keep the same directory structure as img_root);
-                   if None, original images are used directly
-        strict_crop: if True, raise an error when a cropped image is missing;
-                     if False, fallback to the original image
+        ImageFolder-style dataset that reads images directly from `crop_root`.
+
+        Expected structure:
+          crop_root/
+            class_0/xxx.jpg
+            class_0/xxy.jpg
+            class_1/123.jpg
+            ...
+
+        Or (if you pass crop_root as ".../train" or ".../test") the same structure applies.
         """
-        self.root = os.path.abspath(img_root)
+        self.root = os.path.abspath(crop_root)
         self.transform = transform
-        self.crop_root = os.path.abspath(crop_root) if crop_root is not None else None
-        self.strict_crop = strict_crop
 
         file_paths = []
         labels_list = []
-        labels = {}
+        class_to_idx = {}
         label_counter = 0
 
-        # Build class-to-index mapping from first-level subdirectories
-        for root, dirs, files in os.walk(self.root):
-            # Only create labels at the first directory level (consistent with the original implementation)
-            if root == self.root:
-                for dir_name in dirs:
-                    subdir_path = os.path.join(root, dir_name)
-                    if dir_name not in labels:
-                        labels[dir_name] = label_counter
-                        label_counter += 1
-                    # Collect image files under this class directory
-                    for fname in os.listdir(subdir_path):
-                        fpath = os.path.join(subdir_path, fname)
-                        if os.path.isfile(fpath):
-                            file_paths.append(os.path.abspath(fpath))
-                            labels_list.append(labels[dir_name])
+        # Only map labels from the first-level subdirectories under root
+        for entry in sorted(os.listdir(self.root)):
+            subdir_path = os.path.join(self.root, entry)
+            if not os.path.isdir(subdir_path):
+                continue
+
+            if entry not in class_to_idx:
+                class_to_idx[entry] = label_counter
+                label_counter += 1
+
+            label = class_to_idx[entry]
+            for fname in sorted(os.listdir(subdir_path)):
+                fpath = os.path.join(subdir_path, fname)
+                if os.path.isfile(fpath):
+                    file_paths.append(os.path.abspath(fpath))
+                    labels_list.append(label)
 
         self.imgs = file_paths
         self.labels = labels_list
-
-    def _to_crop_path(self, img_abs_path: str) -> str:
-        """Map an absolute image path to the corresponding cropped image path:
-        <crop_root>/<relative-path-from-img_root>
-        """
-        rel = os.path.relpath(os.path.abspath(img_abs_path), start=self.root)
-        if rel.startswith(".."):
-            # Fallback: theoretically should not happen; use filename only
-            rel = os.path.basename(img_abs_path)
-        return os.path.join(self.crop_root, rel)
 
     def __getitem__(self, index):
         img_path = self.imgs[index]
         target = self.labels[index]
 
-        # If crop_root is provided, try to load the corresponding cropped image
-        if self.crop_root is not None:
-            crop_path = self._to_crop_path(img_path)
-            if os.path.exists(crop_path) and os.path.isfile(crop_path):
-                img = default_loader(crop_path)
-            else:
-                if self.strict_crop:
-                    raise FileNotFoundError(
-                        f"Cropped image not found: {crop_path}\n"
-                        f"Original image: {img_path}\n"
-                        f"Please ensure the cropped image has the same relative path under crop_root."
-                    )
-                # Non-strict mode: fallback to original image
-                img = default_loader(img_path)
-        else:
-            # No crop directory provided: load original image directly
-            img = default_loader(img_path)
+        img = default_loader(img_path)
 
         if self.transform is not None:
             img = self.transform(img)
+
         return img, target
 
     def __len__(self):
