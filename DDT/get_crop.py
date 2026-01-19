@@ -218,7 +218,7 @@ def robust_co_locate_bbox(ddt, img, trans_vectors, descriptor_means):
 # all other datasets follow bird-style square cropping.
 TASK_PAD = {
     'car':      dict(pad_w=0.10, pad_h=0.30),   # slight width expansion, larger height expansion
-    'aircraft': dict(pad_w=0.2, pad_h=0.8),   # usually flatter; expand height a bit more
+    'aircraft': dict(pad_w=0.30, pad_h=0.90),   # usually flatter; expand height a bit more
 }
 
 def apply_taskwise_crop_policy(task, x1, y1, x2, y2, W, H):
