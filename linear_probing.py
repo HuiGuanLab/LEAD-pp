@@ -66,13 +66,9 @@ parser.add_argument('--moco-t', default=0.2, type=float, help='softmax temperatu
 parser.add_argument('--resume', default='', type=str, metavar='PATH', help='path to latest checkpoint (default: none)')
 parser.add_argument('--test', default='', type=str, metavar='PATH', help='path to latest checkpoint (default: none)')
 parser.add_argument('--crop-root', default='./DDT/crop_dataset/bird_crop', type=str, metavar='PATH',help='path to crop dataset')######
-parser.add_argument('--results-dir', default='', type=str, metavar='PATH', help='path to cache (default: none)')
+parser.add_argument('--results_dir', default='', type=str, metavar='PATH', help='path to cache (default: none)')
 
-args = parser.parse_args('')  # running in ipynb
-
-# set command line arguments here when running in ipynb
-args.results_dir ='./checkpoints_linear/linear_LEAD++_bird_check'######
-args.resume = './checkpoints/result_bird/model_last.pth'######
+args = parser.parse_args()  # running in ipynb
 
 class AverageMeter(object):
     """Computes and stores the average and current value"""
@@ -158,10 +154,10 @@ test_transform = transforms.Compose([
 crop_train = os.path.join(args.crop_root, "train") if os.path.isdir(os.path.join(args.crop_root, "train")) else args.crop_root
 crop_test  = os.path.join(args.crop_root, "test")  if os.path.isdir(os.path.join(args.crop_root, "test"))  else args.crop_root
 
-train_data = MyDataSet_DDT(img_root=crop_train, crop_root=crop_train, transform=train_transform)
+train_data = MyDataSet_DDT(crop_root=crop_train, transform=train_transform)
 train_loader = DataLoader(train_data, batch_size=args.batch_size, shuffle=True, num_workers=16, pin_memory=True, drop_last=True)
 
-test_data  = MyDataSet_DDT(img_root=crop_test, crop_root=crop_test,  transform=test_transform)
+test_data  = MyDataSet_DDT(crop_root=crop_test,  transform=test_transform)
 test_loader = DataLoader(test_data, batch_size=args.batch_size, shuffle=False, num_workers=16, pin_memory=True)
 
 
