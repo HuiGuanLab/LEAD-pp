@@ -109,6 +109,12 @@ After that, we will obtain the cropped version of the dataset.
 - Run the following scripts for pre-training and downstream linear probing and image retrieval.
 
 ```
+chmod +x ./run_train_test.sh
+chmod +x ./run_train.sh
+chmod +x ./run_linear.sh
+chmod +x ./run_retrieval.sh
+```
+```
 ./run_train_test.sh $task $dataset $llm_description $train_ckpt_name $num_classes $cuda_device &linear_name
 ```
 
@@ -138,6 +144,9 @@ After that, we will obtain the cropped version of the dataset.
 - Run the following script for pretraining. It will save the checkpoints to `./checkpoints/$checkpoints_name/`.
 
 ```
+chmod +x ./run_train.sh
+```
+```
 ./run_train.sh $task $dataset $llm_description $checkpoints_name $num_classes $cuda_device
 ```
 
@@ -165,6 +174,9 @@ After that, we will obtain the cropped version of the dataset.
 
 - Run the following script for linear probing.  We use a single machine and a single GPU to train linear probing. It will save the checkpoints to `./checkpoints_linear/$checkpoints_name/`.
 ```
+chmod +x ./run_linear.sh
+```
+```
 ./run_linear.sh $task $pretrained $checkpoints_name $num_classes $cuda_device
 ```
 
@@ -187,7 +199,9 @@ After that, we will obtain the cropped version of the dataset.
 #### Image Retrieval
 
 - Run the following script for Image Retrieval.  We use a single machine and a single GPU to implement image retrieval.
-
+```
+chmod +x ./run_retrieval.sh
+```
 ```
 ./run_retrieval.sh $task $dataset $pretrained $cuda_device
 ```
