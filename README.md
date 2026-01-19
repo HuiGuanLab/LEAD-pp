@@ -109,10 +109,7 @@ After that, we will obtain the cropped version of the dataset.
 - Run the following scripts for pre-training and downstream linear probing and image retrieval.
 
 ```
-chmod +x ./run_train_test.sh
-chmod +x ./run_train.sh
-chmod +x ./run_linear.sh
-chmod +x ./run_retrieval.sh
+chmod +x ./run_*.sh
 ```
 ```
 ./run_train_test.sh $task $dataset $llm_description $train_ckpt_name $num_classes $cuda_device &linear_name
