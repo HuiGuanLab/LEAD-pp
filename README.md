@@ -13,25 +13,25 @@ All datasets can be downloaded by clicking the corresponding links below.
   <thead>
     <tr>
       <th align="left">Dataset</th>
-      <th align="left">Download</th>
+      <th align="left">Download Link</th>
     </tr>
   </thead>
   <tbody>
     <tr>
       <td><b>CUB-200-2011</b></td>
-      <td><a href="https://www.vision.caltech.edu/datasets/cub_200_2011/">Official Website</a></td>
+      <td><a href="https://www.vision.caltech.edu/datasets/cub_200_2011/">Download</a></td>
     </tr>
     <tr>
       <td><b>Stanford Cars</b></td>
-      <td><a href="https://huggingface.co/datasets/tanganke/stanford_cars/">HuggingFace</a></td>
+      <td><a href="https://huggingface.co/datasets/tanganke/stanford_cars/">Download</a></td>
     </tr>
     <tr>
       <td><b>FGVC Aircraft</b></td>
-      <td><a href="https://www.robots.ox.ac.uk/~vgg/data/fgvc-aircraft/">Official Website</a></td>
+      <td><a href="https://www.robots.ox.ac.uk/~vgg/data/fgvc-aircraft/">Download</a></td>
     </tr>
     <tr>
       <td><b>Stanford Dogs</b></td>
-      <td><a href="http://vision.stanford.edu/aditya86/ImageNetDogs/">Official Website</a></td>
+      <td><a href="http://vision.stanford.edu/aditya86/ImageNetDogs/">Download</a></td>
     </tr>
   </tbody>
 </table>
