@@ -175,16 +175,20 @@ def bbox_quality_score(x1, y1, x2, y2, W, H):
     return score
 
 
-def robust_co_locate_bbox(ddt, img, trans_vectors, descriptor_means):
+def robust_co_locate_bbox(ddt, img, trans_vectors, descriptor_means, over_num=0.0):
     """
     Search over multiple cut_rate values to select a more concentrated
     and reasonable bbox.
     Note: no extra expansion is introduced here; cut_rate is an internal
     DDT parameter (not an additional margin).
+
+    over_num: threshold on the normalised PCA response used by DDT.max_conn_mask
+              to build the binary mask. Default 0.0 keeps the original DDT
+              behaviour. Higher values shrink the mask (useful for datasets
+              with small objects / busy backgrounds, e.g. bird, dog).
     """
     W, H = img.size
     cut_rates = [1.25, 1.15, 1.05, 0.95, 0.85]
-    over_num = 0.0
 
     best = None  # (score, (x1,y1,x2,y2), used_cut_rate)
     for cr in cut_rates:
@@ -218,7 +222,7 @@ def robust_co_locate_bbox(ddt, img, trans_vectors, descriptor_means):
 # all other datasets follow bird-style square cropping.
 TASK_PAD = {
     'car':      dict(pad_w=0.10, pad_h=0.30),   # slight width expansion, larger height expansion
-    'aircraft': dict(pad_w=0.30, pad_h=0.90),   # usually flatter; expand height a bit more
+    'aircraft': dict(pad_w=2.0, pad_h=3.0),     # very aggressive expansion: force crop to essentially the full image
 }
 
 def apply_taskwise_crop_policy(task, x1, y1, x2, y2, W, H):
