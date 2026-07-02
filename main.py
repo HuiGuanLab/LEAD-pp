@@ -32,20 +32,20 @@ from torch.utils.tensorboard import SummaryWriter
 parser = argparse.ArgumentParser(description='Train MoCo on CUB200')
 
 parser.add_argument('-a', '--arch', default='clip')
-parser.add_argument('--lr', '--learning-rate', default=0.03, type=float, metavar='LR', help='initial learning rate', dest='lr')
+parser.add_argument('--lr', '--learning-rate', default=0.02, type=float, metavar='LR', help='initial learning rate', dest='lr')
 parser.add_argument('--epochs', default=100, type=int, metavar='N', help='number of total epochs to run')
 parser.add_argument('--schedule', default=[60, 80], nargs='*', type=int, help='learning rate schedule (when to drop lr by 10x); does not take effect if --cos is on')
 parser.add_argument('--cos', default=True, help='use cosine lr schedule')
 
 parser.add_argument('--seed', default=123, type=int, metavar='N', help='random seed')
 parser.add_argument('--batch-size', default=64, type=int, metavar='N', help='mini-batch size')
-parser.add_argument('--wd', default=1e-4, type=float, metavar='W', help='weight decay')
+parser.add_argument('--wd', default=5e-4, type=float, metavar='W', help='weight decay')
 
 # moco specific configs:
 parser.add_argument('--moco-dim', default=512, type=int, help='feature dimension')
 parser.add_argument('--moco-k', default=65536, type=int, help='queue size; number of negative keys')
-parser.add_argument('--moco-m', default=0.9999, type=float, help='moco momentum of updating key encoder')
-parser.add_argument('--moco-t', default=0.2, type=float, help='softmax temperature')
+parser.add_argument('--moco-m', default=0.999, type=float, help='moco momentum of updating key encoder')
+parser.add_argument('--moco-t', default=0.27, type=float, help='softmax temperature')
 
 # knn monitor
 parser.add_argument('--knn-k', default=200, type=int, help='k in kNN monitor')
@@ -65,7 +65,7 @@ parser.add_argument('--num_workers', default=16, type=int, help='')
 parser.add_argument('--num-classes', default=200, type=int, metavar='N', help='Total number of categories')
 
 parser.add_argument('--alpha', default=0.5, type=float, help='contrastive loss weight')
-parser.add_argument('--beta', default=10, type=float, help='distill loss weight')
+parser.add_argument('--beta', default=20, type=float, help='distill loss weight')
 parser.add_argument('--text-load', default='text_description_tensor/bird_text_tensor.pt', type=str, help='text of clip feature')
 parser.add_argument('--temperature', default=0.02, type=float, help='softmax temperature')
 
